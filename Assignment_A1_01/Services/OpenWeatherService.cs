@@ -23,7 +23,6 @@ public class OpenWeatherService
         // Bara för att se rådatan. Ta bort innan färdig produktion
         // Console.WriteLine(content);
 
-        Console.WriteLine(content);
         WeatherApiData wd = JsonConvert.DeserializeObject<WeatherApiData>(content);
 
         //Convert WeatherApiData to Forecast using Linq.

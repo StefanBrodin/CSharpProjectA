@@ -14,6 +14,22 @@ class Program
 
         //Your Code to present each forecast item in a grouped list
         Console.WriteLine($"Weather forecast for {forecast.City}");
+
+        var groupedByDay = forecast.Items.GroupBy(f => f.DateTime.Date).OrderBy(g => g.Key);
+
+        foreach (var groupOfDays in groupedByDay)
+        {
+            Console.WriteLine($"{groupOfDays.Key:yyyy-MM-dd}");
+
+            foreach (var item in groupOfDays)
+            {
+                Console.WriteLine($"   - {item.DateTime:HH:mm}: " +
+                                 $"{item.Description}, " +
+                                 $"temperature: {item.Temperature} °C, " +
+                                 $"wind: {item.WindSpeed} m/s");
+            }
+
+        }
     }
 }
 
