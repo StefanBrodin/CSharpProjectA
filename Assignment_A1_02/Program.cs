@@ -23,8 +23,7 @@ class Program
             tasks[0] = service.GetForecastAsync(latitude, longitude);
 
             // Weather service error. Error: Response status code does not indicate success: 404 (Not Found).
-            // + Unhandled exception. System.AggregateException: One or more errors occurred. (Response status code does not indicate success: 404 (Not Found).)
-            tasks[1] = service.GetForecastAsync("asdfw"); 
+            tasks[1] = service.GetForecastAsync("asdfw");
 
             await Task.WhenAll(tasks[0], tasks[1]);
         }
@@ -39,34 +38,38 @@ class Program
 
         foreach (var task in tasks)
         {
-            // How to deal with successful and fault tasks (Not yet)
-            var forecast = task.Result;
-
-            string forecastTitle = $"Väderprognos för {forecast.City}";
-            Console.WriteLine(forecastTitle);
-            Console.WriteLine(new string('-', forecastTitle.Length));
-
-            var groupedByDay = forecast.Items
-                .GroupBy(f => f.DateTime.Date)
-                .OrderBy(g => g.Key);
-
-            foreach (var groupOfDays in groupedByDay)
+            // How to deal with successful and fault tasks 
+            if (task.IsCompletedSuccessfully)
             {
-                string forecastDate = groupOfDays.Key.ToString("dddd dd MMMM yyyy").FirstCharToUpper();
-                Console.WriteLine(forecastDate);
+                var forecast = task.Result;
 
-                // Now the printout can handle potential missing values
-                foreach (var item in groupOfDays)
+                string forecastTitle = $"Väderprognos för {forecast.City}";
+                Console.WriteLine(forecastTitle);
+                Console.WriteLine(new string('-', forecastTitle.Length));
+
+                var groupedByDay = forecast.Items
+                    .GroupBy(f => f.DateTime.Date)
+                    .OrderBy(g => g.Key);
+
+                foreach (var groupOfDays in groupedByDay)
                 {
-                    string timeStr = item.DateTime.ToString("HH:mm");
-                    string tempStr = item.Temperature?.ToString("F1") ?? "(inget värde)";
-                    string windStr = item.WindSpeed?.ToString("F1") ?? "(inget värde)";
-                    string descStr = item.Description?.FirstCharToUpper() ?? "(inget värde)";
+                    string forecastDate = groupOfDays.Key.ToString("dddd dd MMMM yyyy").FirstCharToUpper();
+                    Console.WriteLine(forecastDate);
 
-                    Console.WriteLine($"   - {timeStr}: {descStr}, temperatur: {tempStr} °C, vind: {windStr} m/s.");
+                    // Now the printout can handle potential missing values
+                    foreach (var item in groupOfDays)
+                    {
+                        string timeStr = item.DateTime.ToString("HH:mm");
+                        string tempStr = item.Temperature?.ToString("F1") ?? "(inget värde)";
+                        string windStr = item.WindSpeed?.ToString("F1") ?? "(inget värde)";
+                        string descStr = item.Description?.FirstCharToUpper() ?? "(inget värde)";
+
+                        Console.WriteLine($"   - {timeStr}: {descStr}, temperatur: {tempStr} °C, vind: {windStr} m/s.");
+                    }
+
+                    Console.WriteLine();
                 }
 
-                Console.WriteLine();
             }
         }
     }
