@@ -21,15 +21,20 @@ class Program
 
             // Create the two tasks and wait for completion
             tasks[0] = service.GetForecastAsync(latitude, longitude);
-            tasks[1] = service.GetForecastAsync("Miami");
+
+            // Weather service error. Error: Response status code does not indicate success: 404 (Not Found).
+            // + Unhandled exception. System.AggregateException: One or more errors occurred. (Response status code does not indicate success: 404 (Not Found).)
+            tasks[1] = service.GetForecastAsync("asdfw"); 
 
             await Task.WhenAll(tasks[0], tasks[1]);
         }
         catch (Exception ex)
         {
             exception = ex;
-            //How to handle an exception (Not yet)
-            //Your Code
+            //How to handle an exception 
+            Console.WriteLine("Weather service error.");
+            Console.WriteLine($"Error: {exception.Message}");
+
         }
 
         foreach (var task in tasks)
