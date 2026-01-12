@@ -13,23 +13,46 @@ class Program
         Forecast forecast = await new OpenWeatherService().GetForecastAsync(latitude, longitude);
 
         //Your Code to present each forecast item in a grouped list
-        Console.WriteLine($"Weather forecast for {forecast.City}");
 
-        var groupedByDay = forecast.Items.GroupBy(f => f.DateTime.Date).OrderBy(g => g.Key);
+        string forecastTitle = $"Väderprognos för {forecast.City}";
+        Console.WriteLine(forecastTitle);
+        Console.WriteLine(new string('-', forecastTitle.Length));
+
+        var groupedByDay = forecast.Items
+            .GroupBy(f => f.DateTime.Date)
+            .OrderBy(g => g.Key);
 
         foreach (var groupOfDays in groupedByDay)
         {
-            Console.WriteLine($"{groupOfDays.Key:yyyy-MM-dd}");
+            string forecastDate = $"{groupOfDays.Key:dddd dd MMMM yyyy}".FirstCharToUpper();
 
+            Console.WriteLine($"{forecastDate}");
+
+            // Now the printout can handle potential missing values
             foreach (var item in groupOfDays)
             {
-                Console.WriteLine($"   - {item.DateTime:HH:mm}: " +
-                                 $"{item.Description}, " +
-                                 $"temperature: {item.Temperature} °C, " +
-                                 $"wind: {item.WindSpeed} m/s");
+                string timeStr = item.DateTime.ToString("HH:mm");
+                string tempStr = item.Temperature?.ToString("F1") ?? "(inget värde)";
+                string windStr = item.WindSpeed?.ToString("F1") ?? "(inget värde)";
+                string descStr = item.Description.FirstCharToUpper() ?? "(inget värde)";
+
+                string capitalized = descStr.FirstCharToUpper();
+
+                Console.WriteLine($"   - {timeStr}: " +
+                                  $"{descStr}, " +
+                                  $"temperatur: {tempStr} °C, " +
+                                  $"vind: {windStr} m/s.");
             }
 
+            Console.WriteLine();
         }
     }
+
+}
+
+public static class MyExtensions
+{
+    public static string FirstCharToUpper(this string s) =>
+    string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
 }
 

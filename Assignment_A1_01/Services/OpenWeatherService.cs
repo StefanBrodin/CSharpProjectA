@@ -16,41 +16,30 @@ public class OpenWeatherService
 
         HttpResponseMessage response = await _httpClient.GetAsync(uri);
         response.EnsureSuccessStatusCode();
-        
-        //Convert Json to NewsResponse
-        string content = await response.Content.ReadAsStringAsync();
 
-        // Bara för att se rådatan. Ta bort innan färdig produktion
-        // Console.WriteLine(content);
+        // Convert Json to NewsResponse
+        string content = await response.Content.ReadAsStringAsync();
 
         WeatherApiData wd = JsonConvert.DeserializeObject<WeatherApiData>(content);
 
-        //Convert WeatherApiData to Forecast using Linq.
-        //Your code
-        //Hint: you will find 
-        //City: wd.city.name
-        //Daily forecast in wd.list, in an item in the list
-        //      Date and time in Unix timestamp: dt 
-        //      Temperature: main.temp
-        //      WindSpeed: wind.speed
-        //      Description:  first item in weather[].description
-        //      Icon:  $"http://openweathermap.org/img/w/{wdle.weather.First().icon}.png"   //NOTE: Not necessary, only if you like to use an icon
-
+        // Create the forecast object of type Forecast based on WeatherApiData.
+        // Now a bit more fail-safe by better handling of potentially missing data/null
         var forecast = new Forecast
         {
             City = wd.city.name,
             Items = wd.list
                     .Select(item => new ForecastItem
                     {
-                        DateTime = UnixTimeStampToDateTime(item.dt),
-                        Temperature = item.main.temp,
-                        WindSpeed = item.wind.speed,
-                        Description = item.weather.First().description,
-                        Icon = $"http://openweathermap.org/img/w/{item.weather.First().icon}.png"
+                        DateTime = UnixTimeStampToDateTime(item.dt), // Can never be NULL after serialization, at worst it will be 0 which will mean 1970-01-01, an obvious error!
+                        Temperature = item.main?.temp ?? double.NaN,
+                        WindSpeed = item.wind?.speed ?? double.NaN,
+                        Description = item.weather.FirstOrDefault()?.description ?? "No Description!",
+                        Icon = item.weather.FirstOrDefault()?.icon is string icon
+                            ? $"http://openweathermap.org/img/w/{icon}.png"
+                            : null
                     })
                     .ToList()
         };
-
 
         return forecast;
     }
