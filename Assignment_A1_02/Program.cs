@@ -9,36 +9,42 @@ class Program
     {
         OpenWeatherService service = new OpenWeatherService();
 
-        // Register the event
+        //Register the event
         service.WeatherForecastAvailable += Service_WeatherForecastAvailable;
 
         Task<Forecast>[] tasks = { null, null };
+        //Task<Forecast>[] tasks = { null, null, null, null, null };
         Exception exception = null;
         try
         {
             double latitude = 59.5086798659495;
             double longitude = 18.2654625932976;
 
-            // Create the two tasks and wait for completion
-            tasks[0] = service.GetForecastAsync(latitude, longitude);
+            //// Gröna Lund, Lustiga huset (Östermalm)
+            //double latitude2 = 59.32337090557411;
+            //double longitude2 = 18.095394372940067;
 
-            // Weather service error. Error: Response status code does not indicate success: 404 (Not Found).
-            tasks[1] = service.GetForecastAsync("asdfw");
+            //Create the two tasks and wait for completion
+            tasks[0] = service.GetForecastAsync(latitude, longitude);
+            tasks[1] = service.GetForecastAsync("Miami");
+            //tasks[2] = service.GetForecastAsync("Gasdfasdle"); // Task failed: Response status code does not indicate success: 404 (Not Found).
+            //tasks[3] = service.GetForecastAsync("Gävle");
+            //tasks[4] = service.GetForecastAsync(latitude2, longitude2);
 
             await Task.WhenAll(tasks[0], tasks[1]);
+            //await Task.WhenAll(tasks[0], tasks[1], tasks[2], tasks[3], tasks[4]);
         }
         catch (Exception ex)
         {
             exception = ex;
-            //How to handle an exception 
+            //How to handle an exception
             Console.WriteLine("Weather service error.");
             Console.WriteLine($"Error: {exception.Message}");
-
         }
 
         foreach (var task in tasks)
         {
-            // How to deal with successful and fault tasks 
+            //How to deal with successful and fault tasks
             if (task.IsCompletedSuccessfully)
             {
                 var forecast = task.Result;
@@ -71,10 +77,14 @@ class Program
                 }
 
             }
+            else if (task.IsFaulted)
+            {
+                Console.WriteLine($"Task failed: {task.Exception?.InnerException?.Message ?? "Unknown error"}");
+            }
         }
     }
 
-    // Event handler declaration
+    //Event handler declaration
     private static void Service_WeatherForecastAvailable(object sender, string message)
     {
         Console.WriteLine($"Event message from weather service: {message}");
