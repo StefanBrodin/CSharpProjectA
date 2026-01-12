@@ -24,9 +24,8 @@ class Program
 
         foreach (var groupOfDays in groupedByDay)
         {
-            string forecastDate = $"{groupOfDays.Key:dddd dd MMMM yyyy}".FirstCharToUpper();
-
-            Console.WriteLine($"{forecastDate}");
+            string forecastDate = groupOfDays.Key.ToString("dddd dd MMMM yyyy").FirstCharToUpper();
+            Console.WriteLine(forecastDate);
 
             // Now the printout can handle potential missing values
             foreach (var item in groupOfDays)
@@ -34,14 +33,9 @@ class Program
                 string timeStr = item.DateTime.ToString("HH:mm");
                 string tempStr = item.Temperature?.ToString("F1") ?? "(inget värde)";
                 string windStr = item.WindSpeed?.ToString("F1") ?? "(inget värde)";
-                string descStr = item.Description.FirstCharToUpper() ?? "(inget värde)";
+                string descStr = item.Description?.FirstCharToUpper() ?? "(inget värde)";
 
-                string capitalized = descStr.FirstCharToUpper();
-
-                Console.WriteLine($"   - {timeStr}: " +
-                                  $"{descStr}, " +
-                                  $"temperatur: {tempStr} °C, " +
-                                  $"vind: {windStr} m/s.");
+                Console.WriteLine($"   - {timeStr}: {descStr}, temperatur: {tempStr} °C, vind: {windStr} m/s.");
             }
 
             Console.WriteLine();
