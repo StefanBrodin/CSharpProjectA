@@ -9,8 +9,8 @@ class Program
     {
         OpenWeatherService service = new OpenWeatherService();
 
-        //Register the event
-        //Your Code
+        // Register the event
+        service.WeatherForecastAvailable += Service_WeatherForecastAvailable;
 
         Task<Forecast>[] tasks = { null, null };
         Exception exception = null;
@@ -19,7 +19,7 @@ class Program
             double latitude = 59.5086798659495;
             double longitude = 18.2654625932976;
 
-            //Create the two tasks and wait for comletion
+            // Create the two tasks and wait for completion
             tasks[0] = service.GetForecastAsync(latitude, longitude);
             tasks[1] = service.GetForecastAsync("Miami");
 
@@ -28,17 +28,53 @@ class Program
         catch (Exception ex)
         {
             exception = ex;
-            //How to handle an exception
+            //How to handle an exception (Not yet)
             //Your Code
         }
 
         foreach (var task in tasks)
         {
-            //How to deal with successful and fault tasks
-            //Your Code
+            // How to deal with successful and fault tasks (Not yet)
+            var forecast = task.Result;
+
+            string forecastTitle = $"Väderprognos för {forecast.City}";
+            Console.WriteLine(forecastTitle);
+            Console.WriteLine(new string('-', forecastTitle.Length));
+
+            var groupedByDay = forecast.Items
+                .GroupBy(f => f.DateTime.Date)
+                .OrderBy(g => g.Key);
+
+            foreach (var groupOfDays in groupedByDay)
+            {
+                string forecastDate = groupOfDays.Key.ToString("dddd dd MMMM yyyy").FirstCharToUpper();
+                Console.WriteLine(forecastDate);
+
+                // Now the printout can handle potential missing values
+                foreach (var item in groupOfDays)
+                {
+                    string timeStr = item.DateTime.ToString("HH:mm");
+                    string tempStr = item.Temperature?.ToString("F1") ?? "(inget värde)";
+                    string windStr = item.WindSpeed?.ToString("F1") ?? "(inget värde)";
+                    string descStr = item.Description?.FirstCharToUpper() ?? "(inget värde)";
+
+                    Console.WriteLine($"   - {timeStr}: {descStr}, temperatur: {tempStr} °C, vind: {windStr} m/s.");
+                }
+
+                Console.WriteLine();
+            }
         }
     }
 
-    //Event handler declaration
-    //Your Code
+    // Event handler declaration
+    private static void Service_WeatherForecastAvailable(object sender, string message)
+    {
+        Console.WriteLine($"Event message from weather service: {message}");
+    }
+}
+
+public static class MyExtensions
+{
+    public static string FirstCharToUpper(this string s) =>
+    string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
 }
