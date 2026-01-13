@@ -3,6 +3,9 @@ using Assignment_A1_03.Services;
 
 namespace Assignment_A1_03;
 
+// Stefan Brodin
+// Länk till GitHub: https://github.com/StefanBrodin/CSharpProjectA/tree/Stefan-Brodin
+
 class Program
 {
     static void Main(string[] args)
@@ -23,12 +26,12 @@ class Program
             tasks[0] = service.GetForecastAsync(latitude, longitude);
             tasks[1] = service.GetForecastAsync("Miami");
 
-            Task.WaitAll(tasks[0], tasks[1]); // Task.WaitAll är synkron och blockerar tråden till skillnad mot await Task.WhenAll
+            Task.WaitAll(tasks[0], tasks[1]); 
 
             tasks[2] = service.GetForecastAsync(latitude, longitude);
             tasks[3] = service.GetForecastAsync("Miami");
 
-            // Wait and confirm we get an event showing cahced data avaialable
+            // Wait and confirm we get an event showing cached data avaialable
             Task.WaitAll(tasks[2], tasks[3]);
         }
         catch (Exception ex)

@@ -5,6 +5,9 @@ using Assignment_A1_03.Models;
 
 namespace Assignment_A1_03.Services;
 
+// Stefan Brodin
+// Länk till GitHub: https://github.com/StefanBrodin/CSharpProjectA/tree/Stefan-Brodin
+
 public class OpenWeatherService
 {
     readonly HttpClient _httpClient = new HttpClient();
