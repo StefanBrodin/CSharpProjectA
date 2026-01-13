@@ -20,6 +20,8 @@ public class OpenWeatherService
     {
         WeatherForecastAvailable?.Invoke(this, message);
     }
+
+    // Forecast by City
     public async Task<Forecast> GetForecastAsync(string city)
     {
         // Create a key-Tuple based on city and time rounded to hours and minutes
@@ -35,7 +37,7 @@ public class OpenWeatherService
             return cachedForecast;
         }
 
-        // If we get to here there is no valid forecast. Fetch a new forecast and save into cache.
+        // If we get to here there is no valid forecast in cache. Fetch a new forecast and save into cache.
 
         //https://openweathermap.org/current
         var language = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
@@ -55,11 +57,24 @@ public class OpenWeatherService
         return forecast;
 
     }
+
+    // Forecast by GeoLocation
     public async Task<Forecast> GetForecastAsync(double latitude, double longitude)
     {
-        //part of cache code here to check if forecast in Cache
-        //generate an event that shows forecast was from cache
-        //Your code
+        // Create a key-Tuple based on latitude, longitude and time rounded to hours and minutes
+        string timeKey = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+        var cacheKey = (latitude, longitude, timeKey);
+
+        // part of cache code here to check if forecast in Cache
+        // generate an event that shows forecast was from cache
+        if (_cachedGeoForecasts.TryGetValue(cacheKey, out var cachedForecast))
+        {
+            // We ahve a cached forecast for this minute, use this and send event
+            OnWeatherForecastAvailable($"Cached weather forecast for ({latitude}, {longitude}) available");
+            return cachedForecast;
+        }
+
+        // If we get to here there is no valid forecast in cache. Fetch a new forecast and save into cache.
 
         //https://openweathermap.org/current
         var language = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
@@ -67,12 +82,18 @@ public class OpenWeatherService
 
         Forecast forecast = await ReadWebApiAsync(uri);
 
-        //part of event and cache code here
-        //generate an event with different message if cached data
-        //Your code
+        // part of event and cache code here
+        // generate an event with different message if cached data
+
+        // Save new forecast to cache using the same key from above
+        _cachedGeoForecasts[cacheKey] = forecast;
+
+        // Send event about having fetched new data
+        OnWeatherForecastAvailable($"New weather forecast for ({latitude}, {longitude}) available");
 
         return forecast;
     }
+
     private async Task<Forecast> ReadWebApiAsync(string uri)
     {
         HttpResponseMessage response = await _httpClient.GetAsync(uri);
