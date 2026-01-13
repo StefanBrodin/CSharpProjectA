@@ -12,29 +12,45 @@ public class OpenWeatherService
     readonly ConcurrentDictionary<(string, string), Forecast> _cachedCityForecasts = new ConcurrentDictionary<(string, string), Forecast>();
 
     // Your API Key
-    readonly string apiKey = "your_api_key_here"; // Replace with your OpenWeatherMap API key
+    readonly string apiKey = "5c1873370d6530313e703ee2ce959255"; // Replace with your OpenWeatherMap API key
 
-    //Event declaration
+    // Event declaration
     public event EventHandler<string> WeatherForecastAvailable;
     protected virtual void OnWeatherForecastAvailable (string message)
     {
         WeatherForecastAvailable?.Invoke(this, message);
     }
-    public async Task<Forecast> GetForecastAsync(string City)
+    public async Task<Forecast> GetForecastAsync(string city)
     {
-        //part of cache code here to check if forecast in Cache
-        //generate an event that shows forecast was from cache
-        //Your code
-        
+        // Create a key-Tuple based on city and time rounded to hours and minutes
+        string timeKey = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+        var cacheKey = (city, timeKey);
+
+        // part of cache code here to check if forecast in Cache
+        // generate an event that shows forecast was from cache
+        if (_cachedCityForecasts.TryGetValue(cacheKey, out var cachedForecast))
+        {
+            // We ahve a cached forecast for this minute, use this and send event
+            OnWeatherForecastAvailable($"Cached weather forecast for {city} available");
+            return cachedForecast;
+        }
+
+        // If we get to here there is no valid forecast. Fetch a new forecast and save into cache.
+
         //https://openweathermap.org/current
         var language = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        var uri = $"https://api.openweathermap.org/data/2.5/forecast?q={City}&units=metric&lang={language}&appid={apiKey}";
+        var uri = $"https://api.openweathermap.org/data/2.5/forecast?q={city}&units=metric&lang={language}&appid={apiKey}";
 
         Forecast forecast = await ReadWebApiAsync(uri);
 
         //part of event and cache code here
         //generate an event with different message if cached data
-        //Your code
+
+        // Save new forecast to cache using the same key from above
+        _cachedCityForecasts[cacheKey] = forecast;
+
+        // Send event about having fetched new data
+        OnWeatherForecastAvailable($"New weather forecast for {city} available");
 
         return forecast;
 
@@ -62,13 +78,29 @@ public class OpenWeatherService
         HttpResponseMessage response = await _httpClient.GetAsync(uri);
         response.EnsureSuccessStatusCode();
 
-        //Convert Json to NewsResponse
+        // Convert Json to NewsResponse
         string content = await response.Content.ReadAsStringAsync();
         WeatherApiData wd = JsonConvert.DeserializeObject<WeatherApiData>(content);
 
-        //Convert WeatherApiData to Forecast using Linq.
-        //Your code
-        var forecast = new Forecast(); //dummy to compile, replaced by your own code
+        // Create the forecast object of type Forecast based on WeatherApiData.
+        // Now a bit more fail-safe by better handling of potentially missing data/null
+        var forecast = new Forecast
+        {
+            City = wd.city.name,
+            Items = wd.list
+                    .Select(item => new ForecastItem
+                    {
+                        DateTime = UnixTimeStampToDateTime(item.dt),
+                        Temperature = item.main?.temp ?? double.NaN,
+                        WindSpeed = item.wind?.speed ?? double.NaN,
+                        Description = item.weather.FirstOrDefault()?.description ?? "No Description!",
+                        Icon = item.weather.FirstOrDefault()?.icon is string icon
+                            ? $"http://openweathermap.org/img/w/{icon}.png"
+                            : null
+                    })
+                    .ToList()
+        };
+
         return forecast;
     }
 
