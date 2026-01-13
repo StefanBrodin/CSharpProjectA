@@ -46,7 +46,7 @@ class Program
             {
                 var forecast = task.Result;
 
-                string forecastTitle = $"Väderprognos för {forecast.City}";
+                string forecastTitle = $"Väderprognos för {forecast.City ?? "Okänd ort"}";
                 Console.WriteLine(forecastTitle);
                 Console.WriteLine(new string('-', forecastTitle.Length));
 
@@ -63,9 +63,9 @@ class Program
                     foreach (var item in groupOfDays)
                     {
                         string timeStr = item.DateTime.ToString("HH:mm");
-                        string tempStr = item.Temperature?.ToString("F1") ?? "(inget värde)";
-                        string windStr = item.WindSpeed?.ToString("F1") ?? "(inget värde)";
-                        string descStr = item.Description?.FirstCharToUpper() ?? "(inget värde)";
+                        string tempStr = item.Temperature?.ToString("F1") ?? "n/a";
+                        string windStr = item.WindSpeed?.ToString("F1") ?? "n/a";
+                        string descStr = item.Description?.FirstCharToUpper() ?? "n/a";
 
                         Console.WriteLine($"   - {timeStr}: {descStr}, temperatur: {tempStr} °C, vind: {windStr} m/s.");
                     }

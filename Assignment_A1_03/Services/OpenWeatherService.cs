@@ -24,9 +24,12 @@ public class OpenWeatherService
     // Forecast by City
     public async Task<Forecast> GetForecastAsync(string city)
     {
+        // Normalize and trim the city name to make it common and comparable
+        string cityKey = city.Trim().ToLower();
+
         // Create a key-Tuple based on city and time rounded to hours and minutes
         string timeKey = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-        var cacheKey = (city, timeKey);
+        var cacheKey = (cityKey, timeKey);
 
         // part of cache code here to check if forecast in Cache
         // generate an event that shows forecast was from cache
@@ -107,14 +110,14 @@ public class OpenWeatherService
         // Now a bit more fail-safe by better handling of potentially missing data/null
         var forecast = new Forecast
         {
-            City = wd.city.name,
-            Items = wd.list
+            City = wd.city?.name,
+            Items = wd.list?
                     .Select(item => new ForecastItem
                     {
                         DateTime = UnixTimeStampToDateTime(item.dt),
-                        Temperature = item.main?.temp ?? double.NaN,
-                        WindSpeed = item.wind?.speed ?? double.NaN,
-                        Description = item.weather.FirstOrDefault()?.description ?? "No Description!",
+                        Temperature = item.main?.temp,
+                        WindSpeed = item.wind?.speed,
+                        Description = item.weather.FirstOrDefault()?.description,
                         Icon = item.weather.FirstOrDefault()?.icon is string icon
                             ? $"http://openweathermap.org/img/w/{icon}.png"
                             : null
